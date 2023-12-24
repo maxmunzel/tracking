@@ -1,11 +1,9 @@
 import numpy as np
+
+
 def scale(alpha):
-        return np.array([
-            [1, 0, 0, 0],
-            [0, 1, 0, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, alpha]
-        ])
+    return np.array([[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, alpha]])
+
 
 def rotation(axis, angle_deg):
     """
@@ -19,31 +17,38 @@ def rotation(axis, angle_deg):
     cos_angle = np.cos(angle_rad)
     sin_angle = np.sin(angle_rad)
 
-    if axis == 'x':
-        rotation_matrix = np.array([
-            [1, 0,         0,          0],
-            [0, cos_angle, -sin_angle, 0],
-            [0, sin_angle, cos_angle,  0],
-            [0, 0,         0,          1]
-        ])
-    elif axis == 'y':
-        rotation_matrix = np.array([
-            [cos_angle,  0, sin_angle, 0],
-            [0,          1, 0,         0],
-            [-sin_angle, 0, cos_angle, 0],
-            [0,          0, 0,         1]
-        ])
-    elif axis == 'z':
-        rotation_matrix = np.array([
-            [cos_angle, -sin_angle, 0, 0],
-            [sin_angle, cos_angle,  0, 0],
-            [0,         0,         1, 0],
-            [0,         0,         0, 1]
-        ])
+    if axis == "x":
+        rotation_matrix = np.array(
+            [
+                [1, 0, 0, 0],
+                [0, cos_angle, -sin_angle, 0],
+                [0, sin_angle, cos_angle, 0],
+                [0, 0, 0, 1],
+            ]
+        )
+    elif axis == "y":
+        rotation_matrix = np.array(
+            [
+                [cos_angle, 0, sin_angle, 0],
+                [0, 1, 0, 0],
+                [-sin_angle, 0, cos_angle, 0],
+                [0, 0, 0, 1],
+            ]
+        )
+    elif axis == "z":
+        rotation_matrix = np.array(
+            [
+                [cos_angle, -sin_angle, 0, 0],
+                [sin_angle, cos_angle, 0, 0],
+                [0, 0, 1, 0],
+                [0, 0, 0, 1],
+            ]
+        )
     else:
         raise ValueError("Invalid axis. Choose 'x', 'y', or 'z'.")
 
     return rotation_matrix
+
 
 def translation(axis, distance):
     """
@@ -53,30 +58,19 @@ def translation(axis, distance):
     :param distance: The distance of translation.
     :return: 4x4 numpy translation matrix.
     """
-    if axis == 'x':
-        translation_matrix = np.array([
-            [1, 0, 0, distance],
-            [0, 1, 0, 0],
-            [0, 0, 1, 0],
-            [0, 0, 0, 1]
-        ])
-    elif axis == 'y':
-        translation_matrix = np.array([
-            [1, 0, 0, 0],
-            [0, 1, 0, distance],
-            [0, 0, 1, 0],
-            [0, 0, 0, 1]
-        ])
-    elif axis == 'z':
-        translation_matrix = np.array([
-            [1, 0, 0, 0],
-            [0, 1, 0, 0],
-            [0, 0, 1, distance],
-            [0, 0, 0, 1]
-        ])
+    if axis == "x":
+        translation_matrix = np.array(
+            [[1, 0, 0, distance], [0, 1, 0, 0], [0, 0, 1, 0], [0, 0, 0, 1]]
+        )
+    elif axis == "y":
+        translation_matrix = np.array(
+            [[1, 0, 0, 0], [0, 1, 0, distance], [0, 0, 1, 0], [0, 0, 0, 1]]
+        )
+    elif axis == "z":
+        translation_matrix = np.array(
+            [[1, 0, 0, 0], [0, 1, 0, 0], [0, 0, 1, distance], [0, 0, 0, 1]]
+        )
     else:
         raise ValueError("Invalid axis. Choose 'x', 'y', or 'z'.")
 
     return translation_matrix
-
-

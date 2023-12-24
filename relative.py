@@ -27,26 +27,26 @@ def main():
     dist_coeffs = np.zeros((4, 1))  # Assuming no lens distortion
 
     trans_from_X_to_box = dict()
-    w = 0.07 # box width in m
+    w = 0.07  # box width in m
     marker_w = 0.053  # marker width in m
     trans_from_X_to_box[1] = (
-        rotation("x", -90) @ translation("y", w/2) @ translation("z", -6) 
+        rotation("x", -90) @ translation("y", w / 2) @ translation("z", -6)
     )
     trans_from_X_to_box[2] = (
         rotation("x", -90)
-        @ translation("y", w/2)
+        @ translation("y", w / 2)
         @ rotation("z", 90)
         @ translation("z", -6)
     )
     trans_from_X_to_box[3] = (
         rotation("x", -90)
-        @ translation("y", w/2)
+        @ translation("y", w / 2)
         @ rotation("z", 180)
         @ translation("z", -6)
     )
     trans_from_X_to_box[4] = (
         rotation("x", -90)
-        @ translation("y", w/2)
+        @ translation("y", w / 2)
         @ rotation("z", 270)
         @ translation("z", -6)
     )
@@ -78,7 +78,7 @@ def main():
                 R, _ = cv2.Rodrigues(rvecs[index])
                 result[:3, :3] = R
                 result[:3, 3] = tvecs[index]
-                return result 
+                return result
 
             if anchor in ids:
                 M0 = get_affine_transform(0)
