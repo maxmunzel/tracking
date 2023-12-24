@@ -105,6 +105,7 @@ def main():
                     print(
                         f"Relative Position of Marker {id} to Marker 0: {x:1.2f} {y:1.2f} {z:1.2f}"
                     )
+                    yield id, target.copy()
 
             # Display the frame
             cv2.imshow("Frame", frame)
@@ -118,4 +119,5 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    for _ in main():
+        pass
