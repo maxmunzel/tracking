@@ -3,7 +3,8 @@ import numpy as np
 import cv2
 import cv2.aruco as aruco
 import numpy as np
-from matrices import translation, rotation, scale
+from matrices import translation, rotation, scale, vec2m, m2vec
+from typing import Tuple
 
 # @profile
 def main():
@@ -24,31 +25,38 @@ def main():
     camera_matrix = np.array(
         [[1000, 0, 320], [0, 1000, 240], [0, 0, 1]], dtype=np.float32
     )
+    while True:
+        ret, frame = cap.read()
+        if ret:
+            h, w, _ = frame.shape
+            camera_matrix[0, 2] = w // 2
+            camera_matrix[1, 2] = h // 2
+            break
     dist_coeffs = np.zeros((4, 1))  # Assuming no lens distortion
 
     trans_from_X_to_box = dict()
     w = 0.07  # box width in m
     marker_w = 0.053  # marker width in m
     trans_from_X_to_box[1] = (
-        rotation("x", -90) @ translation("y", w / 2) @ translation("z", -6)
+        rotation("x", -90) @ translation("y", w / 2) @ translation("z", -0.02)
     )
     trans_from_X_to_box[2] = (
         rotation("x", -90)
         @ translation("y", w / 2)
         @ rotation("z", 90)
-        @ translation("z", -6)
+        @ translation("z", -0.02)
     )
     trans_from_X_to_box[3] = (
         rotation("x", -90)
         @ translation("y", w / 2)
         @ rotation("z", 180)
-        @ translation("z", -6)
+        @ translation("z", -0.02)
     )
     trans_from_X_to_box[4] = (
         rotation("x", -90)
         @ translation("y", w / 2)
         @ rotation("z", 270)
-        @ translation("z", -6)
+        @ translation("z", -0.02)
     )
 
     anchor = 0
@@ -80,6 +88,36 @@ def main():
                 result[:3, 3] = tvecs[index]
                 return result
 
+            Vec3 = Tuple[float, float, float]
+
+            def drawLine(aruco_id: int, start: Vec3, end: Vec3, color: Vec3):
+                aruco_id = int(aruco_id)
+                color = tuple(reversed(color))
+                index = np.where(ids == aruco_id)[0][0]
+                M = get_affine_transform(aruco_id)
+                box2cam = np.linalg.inv(M @ trans_from_X_to_box[aruco_id])
+                box2cam = np.linalg.inv(M)
+                start_cam = np.array(m2vec(box2cam @ vec2m(start)))
+                end_cam = np.array(m2vec(box2cam @ vec2m(end)))
+
+                start_px = (
+                    cv2.projectPoints(
+                        start_cam, np.zeros(3), np.zeros(3), camera_matrix, dist_coeffs
+                    )[0][0]
+                    .flatten()
+                    .astype(int)
+                )
+                end_px = (
+                    cv2.projectPoints(
+                        end_cam, np.zeros(3), np.zeros(3), camera_matrix, dist_coeffs
+                    )[0][0]
+                    .flatten()
+                    .astype(int)
+                )
+                cv2.line(frame, start_px, end_px, color, 2)
+                # cv2.line(frame, start[:2].flatten().astype(int), end[:2].flatten().astype(int), color, 2)
+                print(f"drawing line from {start_px} to {end_px}")
+
             if anchor in ids:
                 M0 = get_affine_transform(0)
 
@@ -88,23 +126,19 @@ def main():
                         continue
 
                     M = get_affine_transform(id)
-                    Z = np.array(
-                        [
-                            [1, 0, 0, 0],
-                            [0, 1, 0, 0],
-                            [0, 0, 1, 0],
-                            [0, 0, 0, 1],
-                        ]
-                    ).T
 
-                    target = np.linalg.inv(M0) @ M @ Z
+                    target = np.linalg.inv(M0) @ M
 
                     x, y, z = target[:3, 3].flatten()
 
+                    drawLine(id, (0, 0, 0), (marker_w / 2, 0, 0), (255, 0, 0))
+                    drawLine(id, (0, 0, 0), (0, marker_w / 2, 0), (0, 255, 0))
+                    drawLine(id, (0, 0, 0), (0, 0, marker_w / 2), (0, 0, 255))
+
                     # Print the relative position
-                    print(
-                        f"Relative Position of Marker {id} to Marker 0: {x:1.2f} {y:1.2f} {z:1.2f}"
-                    )
+                    # print(
+                    #    f"Relative Position of Marker {id} to Marker 0: {x:1.2f} {y:1.2f} {z:1.2f}"
+                    # )
                     yield id, target.copy()
 
             # Display the frame
@@ -113,6 +147,7 @@ def main():
             # Break the loop
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
+
     # Release the capture
     cap.release()
     cv2.destroyAllWindows()

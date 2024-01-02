@@ -8,7 +8,7 @@ from collections import defaultdict
 
 # Function to update the plot
 def update(frame):
-    global ax, trace
+    global ax3d, ax2d, trace
 
     marker_id, transform = frame
     marker_id = int(marker_id)
@@ -16,34 +16,41 @@ def update(frame):
 
     # Update trace
     trace[marker_id].append((x, y, z))
+    if len(trace[marker_id]) > 10:
+        trace[marker_id] = trace[marker_id][1:]
 
     # Clear the axes for the updated plot
-    ax.cla()
-    set_axes_equal(ax)
+    ax3d.cla()
+    ax2d.cla()
 
-    # Plot each trace
-    for marker_trace in trace.values():
+    # Plot each trace in 3D
+    for marker_trace in reversed(trace.values()):
         trace_points = np.array(marker_trace)
-        ax.plot(trace_points[:, 0], trace_points[:, 1], trace_points[:, 2], marker="o")
+        ax3d.plot(
+            trace_points[:, 0], trace_points[:, 1], trace_points[:, 2], marker="o"
+        )
 
-    # Setting labels
-    ax.set_xlabel("X axis")
-    ax.set_ylabel("Y axis")
-    ax.set_zlabel("Z axis")
-    ax.set_title("3D Trace of Marker Positions")
+    # Plot each trace in 2D
+    for marker_trace in reversed(trace.values()):
+        trace_points = np.array(marker_trace)
+        ax2d.plot(trace_points[:, 0], trace_points[:, 1], marker="o")
+
+    # Setting labels for 3D plot
+    ax3d.set_xlabel("X axis")
+    ax3d.set_ylabel("Y axis")
+    ax3d.set_zlabel("Z axis")
+    ax3d.set_title("3D Trace of Marker Positions")
+
+    # Setting labels for 2D plot
+    ax2d.set_xlabel("X axis")
+    ax2d.set_ylabel("Y axis")
+    ax2d.set_title("2D Trace of Marker Positions")
 
 
-# Function to set equal scaling for all axes
-def set_axes_equal(ax):
-    limits = np.array([ax.get_xlim(), ax.get_ylim(), ax.get_zlim()])
-    ax.set_xlim(limits.min(), limits.max())
-    ax.set_ylim(limits.min(), limits.max())
-    ax.set_zlim(limits.min(), limits.max())
-
-
-# Initialize plot
+# Initialize plot with two subplots
 fig = plt.figure()
-ax = fig.add_subplot(111, projection="3d")
+ax3d = fig.add_subplot(121, projection="3d")
+ax2d = fig.add_subplot(122)
 
 # Initialize a dictionary to hold traces of each marker
 trace = defaultdict(list)

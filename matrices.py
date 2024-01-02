@@ -1,4 +1,18 @@
 import numpy as np
+from typing import Tuple
+
+
+def vec2m(vec: Tuple[float, float, float]):
+    x, y, z = vec
+    m = np.eye(4)
+    m[0, 3] = x
+    m[1, 3] = y
+    m[2, 3] = z
+    return m
+
+
+def m2vec(m) -> Tuple[float, float, float]:
+    return m[0, 3], m[1, 3], m[2, 3]
 
 
 def scale(alpha):
