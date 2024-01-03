@@ -1,10 +1,6 @@
-import sys
 import numpy as np
-import cv2
-import cv2.aruco as aruco
 import numpy as np
-from matrices import translation, rotation, scale, vec2m, m2vec
-from typing import Tuple
+from matrices import translation, rotation, m2vec
 import redis
 import json
 
@@ -64,10 +60,6 @@ def main():
                         f"Relative Position of Marker {id} to Marker {anchor}: {x:1.2f} {y:1.2f} {z:1.2f}"
                     )
                     yield id, target.copy()
-
-    # Release the capture
-    cap.release()
-    cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":

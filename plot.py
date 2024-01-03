@@ -40,12 +40,15 @@ def update(frame):
     ax3d.set_ylabel("Y axis")
     ax3d.set_zlabel("Z axis")
     ax3d.set_title("3D Trace of Marker Positions")
+    ax3d.set_xlim(-0.5, 0.5)
+    ax3d.set_ylim(-0.5, 0.5)
+    ax3d.set_zlim(-0.1, 0.5)
 
     # Setting labels for 2D plot
     ax2d.set_xlabel("X axis")
     ax2d.set_ylabel("Y axis")
-    ax2d.set_ylim(-0.2, 0.2)
-    ax2d.set_xlim(-0.2, 0.2)
+    ax2d.set_ylim(-0.5, 0.5)
+    ax2d.set_xlim(-0.5, 0.5)
     ax2d.set_title("2D Trace of Marker Positions")
 
 
