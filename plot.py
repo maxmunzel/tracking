@@ -44,6 +44,8 @@ def update(frame):
     # Setting labels for 2D plot
     ax2d.set_xlabel("X axis")
     ax2d.set_ylabel("Y axis")
+    ax2d.set_ylim(-0.2, 0.2)
+    ax2d.set_xlim(-0.2, 0.2)
     ax2d.set_title("2D Trace of Marker Positions")
 
 

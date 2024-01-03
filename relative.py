@@ -6,6 +6,39 @@ import numpy as np
 from matrices import translation, rotation, scale, vec2m, m2vec
 from typing import Tuple
 
+trans_from_X_to_box = dict()
+w = 0.1278  # box width in m
+marker_w = 0.08  # marker width in m
+marker_h = 0.02 + marker_w / 2  # marker hight over the bottom of the box
+trans_from_X_to_box[1] = (
+    rotation("x", -90) @ translation("y", w / 2) @ translation("z", -marker_h)
+)
+trans_from_X_to_box[2] = (
+    rotation("x", -90)
+    @ translation("y", w / 2)
+    @ rotation("z", 90)
+    @ translation("z", -marker_h)
+)
+trans_from_X_to_box[3] = (
+    rotation("x", -90)
+    @ translation("y", w / 2)
+    @ rotation("z", 180)
+    @ translation("z", -marker_h)
+)
+trans_from_X_to_box[4] = (
+    rotation("x", -90)
+    @ translation("y", w / 2)
+    @ rotation("z", 270)
+    @ translation("z", -marker_h)
+)
+
+# Define the type of ArUco markers
+aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
+# parameters = aruco.DetectorParameters_create()
+
+# Camera calibration parameters (replace with your camera's parameters)
+camera_matrix = np.array([[1000, 0, 320], [0, 1000, 240], [0, 0, 1]], dtype=np.float32)
+
 # @profile
 def main():
     # Initialize the webcam
@@ -17,14 +50,6 @@ def main():
 
     cap = cv2.VideoCapture(source)
 
-    # Define the type of ArUco markers
-    aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
-    # parameters = aruco.DetectorParameters_create()
-
-    # Camera calibration parameters (replace with your camera's parameters)
-    camera_matrix = np.array(
-        [[1000, 0, 320], [0, 1000, 240], [0, 0, 1]], dtype=np.float32
-    )
     while True:
         ret, frame = cap.read()
         if ret:
@@ -34,42 +59,13 @@ def main():
             break
     dist_coeffs = np.zeros((4, 1))  # Assuming no lens distortion
 
-    trans_from_X_to_box = dict()
-    w = 0.07  # box width in m
-    marker_w = 0.053  # marker width in m
-    trans_from_X_to_box[1] = (
-        rotation("x", -90) @ translation("y", w / 2) @ translation("z", -0.02)
-    )
-    trans_from_X_to_box[2] = (
-        rotation("x", -90)
-        @ translation("y", w / 2)
-        @ rotation("z", 90)
-        @ translation("z", -0.02)
-    )
-    trans_from_X_to_box[3] = (
-        rotation("x", -90)
-        @ translation("y", w / 2)
-        @ rotation("z", 180)
-        @ translation("z", -0.02)
-    )
-    trans_from_X_to_box[4] = (
-        rotation("x", -90)
-        @ translation("y", w / 2)
-        @ rotation("z", 270)
-        @ translation("z", -0.02)
-    )
-
     anchor = 0
-
     while True:
         ret, frame = cap.read()
         if ret:
-            # Convert to grayscale
-            gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-
             # Detect ArUco markers
             # corners, ids, rejected_img_points = aruco.detectMarkers(gray, aruco_dict)
-            corners, ids, rejected_img_points = aruco.detectMarkers(frame, aruco_dict)
+            corners, ids, _ = aruco.detectMarkers(frame, aruco_dict)
             if ids is None:
                 ids = np.array([])
             rvecs, tvecs, _ = aruco.estimatePoseSingleMarkers(
@@ -88,57 +84,28 @@ def main():
                 result[:3, 3] = tvecs[index]
                 return result
 
-            Vec3 = Tuple[float, float, float]
-
-            def drawLine(aruco_id: int, start: Vec3, end: Vec3, color: Vec3):
-                aruco_id = int(aruco_id)
-                color = tuple(reversed(color))
-                index = np.where(ids == aruco_id)[0][0]
-                M = get_affine_transform(aruco_id)
-                box2cam = np.linalg.inv(M @ trans_from_X_to_box[aruco_id])
-                box2cam = np.linalg.inv(M)
-                start_cam = np.array(m2vec(box2cam @ vec2m(start)))
-                end_cam = np.array(m2vec(box2cam @ vec2m(end)))
-
-                start_px = (
-                    cv2.projectPoints(
-                        start_cam, np.zeros(3), np.zeros(3), camera_matrix, dist_coeffs
-                    )[0][0]
-                    .flatten()
-                    .astype(int)
-                )
-                end_px = (
-                    cv2.projectPoints(
-                        end_cam, np.zeros(3), np.zeros(3), camera_matrix, dist_coeffs
-                    )[0][0]
-                    .flatten()
-                    .astype(int)
-                )
-                cv2.line(frame, start_px, end_px, color, 2)
-                # cv2.line(frame, start[:2].flatten().astype(int), end[:2].flatten().astype(int), color, 2)
-                print(f"drawing line from {start_px} to {end_px}")
-
             if anchor in ids:
-                M0 = get_affine_transform(0)
+                M0 = get_affine_transform(anchor)
 
                 for id in ids:
                     if id == anchor:
                         continue
+                    id = int(id)
 
                     M = get_affine_transform(id)
 
-                    target = np.linalg.inv(M0) @ M
+                    try:
+                        target = np.linalg.inv(M0) @ M @ trans_from_X_to_box[id]
+                    except KeyError:
+                        # we have detected a spurious marker, skip it
+                        continue
 
-                    x, y, z = target[:3, 3].flatten()
-
-                    drawLine(id, (0, 0, 0), (marker_w / 2, 0, 0), (255, 0, 0))
-                    drawLine(id, (0, 0, 0), (0, marker_w / 2, 0), (0, 255, 0))
-                    drawLine(id, (0, 0, 0), (0, 0, marker_w / 2), (0, 0, 255))
+                    x, y, z = m2vec(target)
 
                     # Print the relative position
-                    # print(
-                    #    f"Relative Position of Marker {id} to Marker 0: {x:1.2f} {y:1.2f} {z:1.2f}"
-                    # )
+                    print(
+                        f"Relative Position of Marker {id} to Marker {anchor}: {x:1.2f} {y:1.2f} {z:1.2f}"
+                    )
                     yield id, target.copy()
 
             # Display the frame
