@@ -56,9 +56,9 @@ def main():
                     x, y, z = m2vec(target)
 
                     # Print the relative position
-                    print(
-                        f"Relative Position of Marker {id} to Marker {anchor}: {x:1.2f} {y:1.2f} {z:1.2f}"
-                    )
+                    # print(
+                    #    f"Relative Position of Marker {id} to Marker {anchor}: {x:1.2f} {y:1.2f} {z:1.2f}"
+                    # )
                     yield id, target.copy()
 
 
