@@ -35,9 +35,10 @@ def main():
     r = redis.Redis(decode_responses=True)
     anchor = "0"
     while True:
-        res = r.xrevrange("aruco", "+", "-", count=1)
+        res = r.xread({"aruco": "$"}, block=1000, count=1)
+
         if res:
-            payload = res[0][1]
+            _, payload = res[0][1][-1]
             # [('1704280318147-0', {'fps': '78.59653330834817', 'transforms': '{}'})]
             transforms = json.loads(payload["transforms"])
             if anchor in transforms.keys():
@@ -53,8 +54,13 @@ def main():
                         # we have detected a spurious marker, skip it
                         continue
 
-                    x, y, z = m2vec(target)
+                    # Add x offset, as the aruco marker is at (offset, 0, 0) in the world coordinate frame.
+                    # Conveniently, the robot and world coordinate frames are aligned, so we just need to adjust
+                    # the x component of the 4x4 matrix.
+                    x_offset = 0.13
+                    target[0, 3] += x_offset
 
+                    # x, y, z = m2vec(target)
                     # Print the relative position
                     # print(
                     #    f"Relative Position of Marker {id} to Marker {anchor}: {x:1.2f} {y:1.2f} {z:1.2f}"
