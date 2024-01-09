@@ -38,7 +38,6 @@ def main(r: redis.Redis):
             break
     dist_coeffs = np.zeros((4, 1))  # Assuming no lens distortion
 
-    anchor = 0
     while True:
         start = time.time()
         ret, frame = cap.read()

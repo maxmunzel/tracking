@@ -34,6 +34,8 @@ trans_from_X_to_box[4] = (
 def main():
     r = redis.Redis(decode_responses=True)
     anchor = "0"
+    M0 = None
+    M0_INV = None
     while True:
         res = r.xread({"aruco": "$"}, block=1000, count=1)
 
@@ -44,6 +46,8 @@ def main():
             if anchor in transforms.keys():
                 M0 = np.array(transforms[anchor]).reshape(4, 4)
                 M0_INV = np.linalg.inv(M0)
+
+            if M0 is not None and M0_INV is not None:
                 for id, transform in transforms.items():
                     if id == anchor:
                         continue
