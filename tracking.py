@@ -9,6 +9,7 @@ import redis
 import json
 from relative import marker_w
 import time
+import typer
 
 
 # Define the type of ArUco markers
@@ -19,9 +20,9 @@ aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
 camera_matrix = np.array([[1000, 0, 320], [0, 1000, 240], [0, 0, 1]], dtype=np.float32)
 
 # @profile
-def main(r: redis.Redis):
+def main(source: str, preview: bool = True):
+    r = redis.Redis(decode_responses=True)
     # Initialize the webcam
-    source = sys.argv[1]
     try:
         source = int(source)
     except ValueError:
@@ -77,12 +78,13 @@ def main(r: redis.Redis):
                 },
             )
 
-            # Display the frame
-            cv2.imshow("Frame", frame)
+            if preview:
+                # Display the frame
+                cv2.imshow("Frame", frame)
 
-            # Break the loop
-            if cv2.waitKey(1) & 0xFF == ord("q"):
-                break
+                # Break the loop
+                if cv2.waitKey(1) & 0xFF == ord("q"):
+                    break
 
     # Release the capture
     cap.release()
@@ -90,6 +92,5 @@ def main(r: redis.Redis):
 
 
 if __name__ == "__main__":
-    r = redis.Redis(decode_responses=True)
-
+    typer.run(main)
     main(r)
