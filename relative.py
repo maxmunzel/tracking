@@ -9,25 +9,31 @@ w = 0.1278  # box width in m
 marker_w = 0.08  # marker width in m
 marker_h = 0.02 + marker_w / 2  # marker hight over the bottom of the box
 trans_from_X_to_box[1] = (
-    rotation("x", -90) @ translation("y", w / 2) @ translation("z", -marker_h)
+    rotation("x", -90)
+    @ translation("y", w / 2)
+    @ translation("z", -marker_h)
+    @ rotation("z", -90)
 )
 trans_from_X_to_box[2] = (
     rotation("x", -90)
     @ translation("y", w / 2)
     @ rotation("z", 90)
     @ translation("z", -marker_h)
+    @ rotation("z", -90)
 )
 trans_from_X_to_box[3] = (
     rotation("x", -90)
     @ translation("y", w / 2)
     @ rotation("z", 180)
     @ translation("z", -marker_h)
+    @ rotation("z", -90)
 )
 trans_from_X_to_box[4] = (
     rotation("x", -90)
     @ translation("y", w / 2)
     @ rotation("z", 270)
     @ translation("z", -marker_h)
+    @ rotation("z", -90)
 )
 
 
