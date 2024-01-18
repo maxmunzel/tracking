@@ -51,8 +51,17 @@ def main():
             transforms = json.loads(payload["transforms"])
             cam_id = payload["camera_id"]
             if anchor in transforms.keys():
-                M0[cam_id] = np.array(transforms[anchor]).reshape(4, 4)
-                M0_INV[cam_id] = np.linalg.inv(M0[cam_id])
+                M = np.array(transforms[anchor]).reshape(4, 4)
+                M_INV = np.linalg.inv(M0[cam_id])
+                if cam_id not in M0:
+                    M0[cam_id] = M
+                    M0_INV[cam_id] = M_INV
+                else:
+                    alpha = 0.98
+                    M0[cam_id] *= alpha
+                    M0_INV[cam_id] *= alpha
+                    M0[cam_id] += (1 - alpha) * M
+                    M0_INV[cam_id] += (1 - alpha) * M_INV
 
             if cam_id in M0:
                 assert M0[cam_id] is not None
