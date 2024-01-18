@@ -40,8 +40,8 @@ trans_from_X_to_box[4] = (
 def main():
     r = redis.Redis(decode_responses=True)
     anchor = "0"
-    M0 = None
-    M0_INV = None
+    M0 = dict()
+    M0_INV = dict()
     while True:
         res = r.xread({"aruco": "$"}, block=1000, count=1)
 
@@ -49,17 +49,20 @@ def main():
             _, payload = res[0][1][-1]
             # [('1704280318147-0', {'fps': '78.59653330834817', 'transforms': '{}'})]
             transforms = json.loads(payload["transforms"])
+            cam_id = payload["camera_id"]
             if anchor in transforms.keys():
-                M0 = np.array(transforms[anchor]).reshape(4, 4)
-                M0_INV = np.linalg.inv(M0)
+                M0[cam_id] = np.array(transforms[anchor]).reshape(4, 4)
+                M0_INV[cam_id] = np.linalg.inv(M0[cam_id])
 
-            if M0 is not None and M0_INV is not None:
+            if cam_id in M0:
+                assert M0[cam_id] is not None
+                assert M0_INV[cam_id] is not None
                 for id, transform in transforms.items():
                     if id == anchor:
                         continue
                     M = np.array(transform).reshape(4, 4)
                     try:
-                        target = M0_INV @ M @ trans_from_X_to_box[int(id)]
+                        target = M0_INV[cam_id] @ M @ trans_from_X_to_box[int(id)]
                     except KeyError:
                         # we have detected a spurious marker, skip it
                         continue
@@ -79,5 +82,6 @@ def main():
 
 
 if __name__ == "__main__":
-    for _ in main():
-        pass
+    for id, target in main():
+        x, y, z = target[:3, 3]
+        print(f"marker {id} at xyz {x:.2f} {y:.2f} {z:.2f}")

@@ -10,6 +10,7 @@ import json
 from relative import marker_w
 import time
 import typer
+import random
 
 
 # Define the type of ArUco markers
@@ -22,6 +23,7 @@ camera_matrix = np.array([[1000, 0, 320], [0, 1000, 240], [0, 0, 1]], dtype=np.f
 # @profile
 def main(source: str, preview: bool = True):
     r = redis.Redis(decode_responses=True)
+    cam_id = random.randint(0, 9999999)
     # Initialize the webcam
     try:
         source = int(source)
@@ -74,6 +76,7 @@ def main(source: str, preview: bool = True):
                 "aruco",
                 {
                     "fps": fps,
+                    "camera_id": cam_id,
                     "transforms": json.dumps(payload),
                 },
             )
