@@ -19,10 +19,26 @@ aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
 # parameters = aruco.DetectorParameters_create()
 
 # Camera calibration parameters (replace with your camera's parameters)
-camera_matrix = np.array([[1000, 0, 320], [0, 1000, 240], [0, 0, 1]], dtype=np.float32)
+camera_matrix = np.array(
+    [
+        1.7907479311571933e03,
+        0.0,
+        9.3152486270890222e02,
+        0.0,
+        1.7907479311571933e03,
+        5.3473987232637899e02,
+        0.0,
+        0.0,
+        1.0,
+    ],
+    dtype=np.float32,
+).reshape(3, 3)
 
+dist_coeffs = np.array(
+    [1.7036472746498343e-01, 0.0, 0.0, 0.0, -1.4241571045237869e00]
+).reshape(5, 1)
 # @profile
-def main(preview: bool = True):
+def main(preview: bool = True, slow: bool = False):
     r = redis.Redis(decode_responses=True)
     cam_id = random.randint(0, 9999999)
     # Initialize the webcam
@@ -37,14 +53,6 @@ def main(preview: bool = True):
     colorCamera.video.link(xoutRgb.input)
     with dai.Device(pipeline) as device:
         qRgb = device.getOutputQueue(name="rgb", maxSize=1, blocking=False)
-
-        while True:
-            frame = qRgb.get().getCvFrame()
-            h, w, _ = frame.shape
-            camera_matrix[0, 2] = w // 2
-            camera_matrix[1, 2] = h // 2
-            break
-        dist_coeffs = np.zeros((4, 1))  # Assuming no lens distortion
 
         while True:
             start = time.time()
@@ -92,10 +100,12 @@ def main(preview: bool = True):
                 # Break the loop
                 if cv2.waitKey(1) & 0xFF == ord("q"):
                     break
+            if slow:
+                time.sleep(1 / 10)
 
     cv2.destroyAllWindows()
 
 
 if __name__ == "__main__":
     typer.run(main)
-    main(r)
+    # main(r)
