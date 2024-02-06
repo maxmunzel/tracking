@@ -19,7 +19,28 @@ aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
 
 # Camera calibration parameters (replace with your camera's parameters)
 camera_matrix = np.array([[1000, 0, 320], [0, 1000, 240], [0, 0, 1]], dtype=np.float32)
-
+camera_matrix = np.array(
+    [
+        9.4425079031444568e02,
+        0.0,
+        6.3411861938672507e02,
+        0.0,
+        9.4425079031444568e02,
+        3.7267119773844064e02,
+        0.0,
+        0.0,
+        1.0,
+    ]
+).reshape(3, 3)
+dist_coeffs = np.array(
+    [
+        0.0,
+        1.0032252215814509e-02,
+        6.4898498787460228e-03,
+        -1.7873876136562906e-03,
+        -1.7555284078852795e-01,
+    ]
+).reshape(1, 5)
 # @profile
 def main(source: str, preview: bool = True):
     r = redis.Redis(decode_responses=True)
@@ -31,16 +52,6 @@ def main(source: str, preview: bool = True):
         pass
 
     cap = cv2.VideoCapture(source)
-
-    while True:
-        ret, frame = cap.read()
-        if ret:
-            h, w, _ = frame.shape
-            camera_matrix[0, 2] = w // 2
-            camera_matrix[1, 2] = h // 2
-            break
-    dist_coeffs = np.zeros((4, 1))  # Assuming no lens distortion
-
     while True:
         start = time.time()
         ret, frame = cap.read()
