@@ -9,6 +9,6 @@ for frame in main():
     #     continue
     marker_id = int(marker_id)
     x, y = transform[:2, 3].flatten()
-    payload = {"x": x, "y": y}
+    payload = {"x": x, "y": y, "cmd": "GOTO"}
     redis_connection.xadd("cart_cmd", payload)
     print(f"x={x:.2f}\ty={y:.2f}")

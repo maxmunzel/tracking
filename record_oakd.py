@@ -20,11 +20,16 @@ def main(file: str, preview: bool = True):
     colorCamera.video.link(xoutRgb.input)
     with dai.Device(pipeline) as device:
         qRgb = device.getOutputQueue(name="rgb", maxSize=1, blocking=False)
-        out = cv2.VideoWriter(file, cv2.VideoWriter_fourcc(*"MJPG"), 30, (1920, 1080))
+        out = cv2.VideoWriter(file, cv2.VideoWriter_fourcc(*"MJPG"), 3, (1920, 1080))
 
+        i = 0
         while True:
+            i += 1
             frame = qRgb.get().getCvFrame()
-            out.write(frame)
+            if not i % 10:
+                out.write(frame)
+
+            frame = frame[:, ::-1, :]
 
             if preview:
                 # Display the frame

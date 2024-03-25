@@ -12,33 +12,13 @@ import time
 import typer
 import depthai as dai
 import random
+from load_calib import load_calib
 
-
-# Define the type of ArUco markers
 aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
-# parameters = aruco.DetectorParameters_create()
 
-# Camera calibration parameters (replace with your camera's parameters)
-camera_matrix = np.array(
-    [
-        1.7907479311571933e03,
-        0.0,
-        9.3152486270890222e02,
-        0.0,
-        1.7907479311571933e03,
-        5.3473987232637899e02,
-        0.0,
-        0.0,
-        1.0,
-    ],
-    dtype=np.float32,
-).reshape(3, 3)
 
-dist_coeffs = np.array(
-    [1.7036472746498343e-01, 0.0, 0.0, 0.0, -1.4241571045237869e00]
-).reshape(5, 1)
-# @profile
-def main(preview: bool = True, slow: bool = False):
+def main(calibration: str, preview: bool = True, slow: bool = False):
+    camera_matrix, dist_coeffs = load_calib(calibration)
     r = redis.Redis(decode_responses=True)
     cam_id = random.randint(0, 9999999)
     # Initialize the webcam
@@ -59,6 +39,12 @@ def main(preview: bool = True, slow: bool = False):
             frame = qRgb.get().getCvFrame()
             # Detect ArUco markers
             # corners, ids, rejected_img_points = aruco.detectMarkers(gray, aruco_dict)
+
+            # gamma correction a la https://docs.opencv.org/3.4/d3/dc1/tutorial_basic_linear_transform.html
+            gamma = 0.4
+            frame = (frame / 255) ** gamma * 255
+            frame = frame.astype(np.uint8)
+
             corners, ids, _ = aruco.detectMarkers(frame, aruco_dict)
             if ids is None:
                 ids = np.array([])
