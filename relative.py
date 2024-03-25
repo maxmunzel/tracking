@@ -1,6 +1,6 @@
 import numpy as np
 import numpy as np
-from scipy.spacial.transform import Rotation
+from scipy.spatial.transform import Rotation
 from matrices import translation, rotation, m2vec
 import redis
 import json
