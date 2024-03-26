@@ -22,15 +22,14 @@ def project_transform_onto_table(transform):  # chatgpt
     # Convert the input rotation to Euler angles with 'ZYX' convention
     euler_angles = Rotation.from_matrix(transform[:3, :3]).as_euler("ZYX")
 
-    # Zero out the roll and pitch components (X and Y axes rotations)
-    euler_angles[0] = 0  # Roll
-    euler_angles[1] = 0  # Pitch
+    euler_angles[1] = 0
+    euler_angles[2] = 0
 
     # Convert the modified Euler angles back to the result
     res[:3, :3] = Rotation.from_euler("ZYX", euler_angles).as_matrix()
 
     # Set z height correctly
-    res[2, 3] = 0
+    res[2, 3] = -0.01
     return res
 
 
@@ -123,10 +122,11 @@ def main():
                     # the x component of the 4x4 matrix.
                     x = 0.12 + target[0, 3]
 
+                    # finger behind box? --> positive error
                     x0 = 0.15
-                    err0 = 0.01
+                    err0 = 0.05
                     x1 = 0.650
-                    err1 = 0.04
+                    err1 = -0.09
                     slope = (err1 - err0) / (x0 - x1)
                     err0 = -x1 * slope - err1
                     err = err0 + slope * x
