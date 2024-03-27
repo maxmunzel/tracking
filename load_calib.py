@@ -4,7 +4,7 @@ from typing import Tuple
 
 
 def load_calib(xml_file: str) -> Tuple[np.ndarray, np.ndarray]:
-    with open("oakd_bot3.xml") as f:
+    with open(xml_file) as f:
         xml = f.read()
 
     camera_matrix_str = (
