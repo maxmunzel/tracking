@@ -28,10 +28,16 @@ def main(calibration: str, preview: bool = True, slow: bool = False):
     colorCamera = pipeline.create(dai.node.ColorCamera)
     colorCamera.setBoardSocket(dai.CameraBoardSocket.RGB)
     colorCamera.setResolution(dai.ColorCameraProperties.SensorResolution.THE_1080_P)
+    cameraId = colorCamera.getCamId()
     xoutRgb = pipeline.create(dai.node.XLinkOut)
     xoutRgb.setStreamName("rgb")
     colorCamera.video.link(xoutRgb.input)
     with dai.Device(pipeline) as device:
+        camera_matrix = np.array(
+            device.readCalibration().getCameraIntrinsics(
+                colorCamera.getBoardSocket(), 1920, 1080
+            )
+        )
         qRgb = device.getOutputQueue(name="rgb", maxSize=1, blocking=False)
 
         while True:
