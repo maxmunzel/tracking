@@ -17,8 +17,7 @@ from load_calib import load_calib
 aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
 
 
-def main(calibration: str, preview: bool = True, slow: bool = False):
-    camera_matrix, dist_coeffs = load_calib(calibration)
+def main(preview: bool = True, slow: bool = False):
     r = redis.Redis(decode_responses=True)
     cam_id = random.randint(0, 9999999)
     # Initialize the webcam
@@ -28,7 +27,6 @@ def main(calibration: str, preview: bool = True, slow: bool = False):
     colorCamera = pipeline.create(dai.node.ColorCamera)
     colorCamera.setBoardSocket(dai.CameraBoardSocket.RGB)
     colorCamera.setResolution(dai.ColorCameraProperties.SensorResolution.THE_1080_P)
-    cameraId = colorCamera.getCamId()
     xoutRgb = pipeline.create(dai.node.XLinkOut)
     xoutRgb.setStreamName("rgb")
     colorCamera.video.link(xoutRgb.input)
@@ -36,6 +34,11 @@ def main(calibration: str, preview: bool = True, slow: bool = False):
         camera_matrix = np.array(
             device.readCalibration().getCameraIntrinsics(
                 colorCamera.getBoardSocket(), 1920, 1080
+            )
+        )
+        dist_coeffs = np.array(
+            device.readCalibration().getDistortionCoefficients(
+                colorCamera.getBoardSocket()
             )
         )
         qRgb = device.getOutputQueue(name="rgb", maxSize=1, blocking=False)
