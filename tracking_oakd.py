@@ -12,7 +12,6 @@ import time
 import typer
 import depthai as dai
 import random
-from load_calib import load_calib
 
 aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
 
@@ -25,7 +24,7 @@ def main(preview: bool = True, slow: bool = False, redis_ip: str = "10.10.10.142
     # depthai magic
     pipeline = dai.Pipeline()
     colorCamera = pipeline.create(dai.node.ColorCamera)
-    colorCamera.setBoardSocket(dai.CameraBoardSocket.RGB)
+    colorCamera.setBoardSocket(dai.CameraBoardSocket.CAM_A)
     colorCamera.setResolution(dai.ColorCameraProperties.SensorResolution.THE_1080_P)
     xoutRgb = pipeline.create(dai.node.XLinkOut)
     xoutRgb.setStreamName("rgb")
@@ -43,16 +42,18 @@ def main(preview: bool = True, slow: bool = False, redis_ip: str = "10.10.10.142
         )
         qRgb = device.getOutputQueue(name="rgb", maxSize=1, blocking=False)
 
+        # gamma correction a la https://docs.opencv.org/3.4/d3/dc1/tutorial_basic_linear_transform.html
+        table = np.array(
+            [((i / 255.0) ** 0.4) * 255 for i in np.arange(0, 256)]
+        ).astype("uint8")
+
         while True:
             start = time.time()
             frame = qRgb.get().getCvFrame()
             # Detect ArUco markers
             # corners, ids, rejected_img_points = aruco.detectMarkers(gray, aruco_dict)
 
-            # gamma correction a la https://docs.opencv.org/3.4/d3/dc1/tutorial_basic_linear_transform.html
-            gamma = 0.4
-            frame = (frame / 255) ** gamma * 255
-            frame = frame.astype(np.uint8)
+            frame = cv2.LUT(frame, table)
 
             corners, ids, _ = aruco.detectMarkers(frame, aruco_dict)
             if ids is None:
