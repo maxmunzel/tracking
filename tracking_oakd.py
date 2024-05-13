@@ -16,7 +16,7 @@ import random
 aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
 
 
-def main(preview: bool = True, slow: bool = False, redis_ip: str = "10.10.10.142"):
+def main(preview: bool = True, slow: bool = False, redis_ip: str = "10.10.20.142"):
     r = redis.Redis(redis_ip, decode_responses=True)
     cam_id = random.randint(0, 9999999)
     # Initialize the webcam
