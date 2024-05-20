@@ -29,6 +29,7 @@ def main(preview: bool = True, slow: bool = False, redis_ip: str = "10.10.20.142
     xoutRgb = pipeline.create(dai.node.XLinkOut)
     xoutRgb.setStreamName("rgb")
     colorCamera.video.link(xoutRgb.input)
+    pipeline.setCameraTuningBlobPath("tuning_exp_limit_8300us.bin")
     with dai.Device(pipeline) as device:
         camera_matrix = np.array(
             device.readCalibration().getCameraIntrinsics(
