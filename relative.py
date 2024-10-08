@@ -34,7 +34,7 @@ def project_transform_onto_table(transform):  # chatgpt
 
 
 trans_from_X_to_box = dict()
-w = 0.1278  # box width in m
+w = 0.1278 + 2 * 0.003  # box width in m plus two times the marker thickness
 marker_w = 0.08  # marker width in m
 marker_h = 0.02 + marker_w / 2  # marker hight over the bottom of the box
 trans_from_X_to_box[1] = (
@@ -120,24 +120,8 @@ def main():
                     # Add x offset, as the aruco marker is at (offset, 0, 0) in the world coordinate frame.
                     # Conveniently, the robot and world coordinate frames are aligned, so we just need to adjust
                     # the x component of the 4x4 matrix.
-                    x = 0.12 + target[0, 3]
+                    target[0, 3] += 0.115
 
-                    # finger behind box? --> positive error
-                    x0 = 0.15
-                    err0 = 0.05
-                    x1 = 0.650
-                    err1 = -0.09
-                    slope = (err1 - err0) / (x0 - x1)
-                    err0 = -x1 * slope - err1
-                    err = err0 + slope * x
-
-                    target[0, 3] = x - err
-
-                    # x, y, z = m2vec(target)
-                    # Print the relative position
-                    # print(
-                    #    f"Relative Position of Marker {id} to Marker {anchor}: {x:1.2f} {y:1.2f} {z:1.2f}"
-                    # )
                     results.append((score(M), id, target.copy()))
                 if results:
                     _, id, target = max(results)

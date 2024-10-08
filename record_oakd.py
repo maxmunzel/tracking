@@ -29,7 +29,7 @@ def main(file: str, preview: bool = True):
             if not i % 10:
                 out.write(frame)
 
-            frame = frame[:, ::-1, :]
+            # frame = frame[:, ::-1, :]
 
             if preview:
                 # Display the frame
