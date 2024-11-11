@@ -12,8 +12,8 @@ def main(file: str, preview: bool = True, cam_id: int = 1):
         while True:
             i += 1
             ret, frame = cam.read()
-            frame = frame[:, :1620, :]  # crop away menu
             assert ret
+            frame = frame[:, :1620, :]  # crop away menu
             if not i % 10:
                 out.write(frame)
 
