@@ -1,3 +1,4 @@
+from collections import defaultdict
 import cv2
 import numpy as np
 import typer
@@ -5,6 +6,7 @@ from matplotlib import pyplot as plt
 from matplotlib.backends.backend_agg import FigureCanvasAgg as FigureCanvas
 from matplotlib.figure import Figure
 from load_calib import load_calib
+from typing import List, Tuple
 
 
 def calculate_marker_distance(rvec1, tvec1, rvec2, tvec2):
@@ -23,6 +25,7 @@ def generate_video(input_video: str, output_video: str, calibration: str):
         ("v", 1, 8),
         ("v", 2, 9),
     ]
+    marker_pairs: List[Tuple[str, int, int]]
     cap = cv2.VideoCapture(input_video)
     if not cap.isOpened():
         raise ValueError("Could not open input video file.")
@@ -45,49 +48,54 @@ def generate_video(input_video: str, output_video: str, calibration: str):
     aruco_dict = cv2.aruco.getPredefinedDictionary(cv2.aruco.DICT_4X4_50)
     aruco_params = cv2.aruco.DetectorParameters()
 
-    distances = []
+    distances = defaultdict(list)
+    times = defaultdict(list)
     frame_count = 0
-    marker_length = 0.75  # Set the actual marker side length in meters
+    marker_length = 0.05625  # Set the actual marker side length in meters
 
+    t = 0
     while cap.isOpened():
         ret, frame = cap.read()
         if not ret:
             break
+        t += 1 / cap.get(cv2.CAP_PROP_FPS)
 
         gray = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
         corners, ids, _ = cv2.aruco.detectMarkers(
             gray, aruco_dict, parameters=aruco_params
         )
 
-        distance = None
         if ids is not None:
             ids = ids.flatten()
-            # TODO: Add for loop here
-            # Only proceed if both markers are detected
-            if marker_id1 in ids and marker_id2 in ids:
-                idx1 = np.where(ids == marker_id1)[0][0]
-                idx2 = np.where(ids == marker_id2)[0][0]
+            for axis, marker_id1, marker_id2 in marker_pairs:
+                key = (axis, marker_id1, marker_id2)
+                # Only proceed if both markers are detected
+                if marker_id1 in ids and marker_id2 in ids:
+                    idx1 = np.where(ids == marker_id1)[0][0]
+                    idx2 = np.where(ids == marker_id2)[0][0]
 
-                # Estimate pose for each marker
-                rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
-                    corners, marker_length, camera_matrix, dist_coeffs
-                )
+                    # Estimate pose for each marker
+                    rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
+                        corners, marker_length, camera_matrix, dist_coeffs
+                    )
 
-                # Calculate the distance between the two markers' translation vectors
-                distance = calculate_marker_distance(
-                    rvecs[idx1], tvecs[idx1], rvecs[idx2], tvecs[idx2]
-                )
-                distances.append(distance)
-            else:
-                distances.append(None)
-        else:
-            distances.append(None)
+                    # Calculate the distance between the two markers' translation vectors
+                    distance = calculate_marker_distance(
+                        rvecs[idx1], tvecs[idx1], rvecs[idx2], tvecs[idx2]
+                    )
+                    distances[key].append(distance)
+                    times[key].append(t)
 
         # Create plot image
         fig = Figure(figsize=(4, 3))
         canvas = FigureCanvas(fig)
         ax = fig.add_subplot(111)
-        ax.plot([d for d in distances if d is not None], color="blue")
+        delta = 0.2
+        # ax.set_ylim(.15 -delta, .15 + delta)
+        for key in marker_pairs:
+            axis = key[0]
+            color = "tab:orange" if axis == "v" else "tab:blue"
+            ax.plot(times[key], distances[key], color=color)
         ax.set_xlabel("Frame")
         ax.set_ylabel("Distance (meters)")
         ax.set_title("Distance between ArUco Markers")
