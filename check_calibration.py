@@ -9,10 +9,9 @@ from load_calib import load_calib
 from typing import List, Tuple
 
 
-def calculate_marker_distance(rvec1, tvec1, rvec2, tvec2):
+def calculate_marker_distance(tvec1, tvec2):
     # Calculate Euclidean distance between two translation vectors
-    distance = np.linalg.norm(tvec1 - tvec2)
-    return distance
+    return np.linalg.norm(tvec1 - tvec2)
 
 
 def generate_video(input_video: str, output_video: str, calibration: str):
@@ -75,16 +74,17 @@ def generate_video(input_video: str, output_video: str, calibration: str):
                     idx2 = np.where(ids == marker_id2)[0][0]
 
                     # Estimate pose for each marker
-                    rvecs, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
+                    _, tvecs, _ = cv2.aruco.estimatePoseSingleMarkers(
                         corners, marker_length, camera_matrix, dist_coeffs
                     )
 
                     # Calculate the distance between the two markers' translation vectors
-                    distance = calculate_marker_distance(
-                        rvecs[idx1], tvecs[idx1], rvecs[idx2], tvecs[idx2]
-                    )
+                    distance = calculate_marker_distance(tvecs[idx1], tvecs[idx2])
                     distances[key].append(distance)
                     times[key].append(t)
+
+            # Draw detected markers on the frame
+            cv2.aruco.drawDetectedMarkers(frame, corners, ids)
 
         # Create plot image
         fig = Figure(figsize=(4, 3))
@@ -96,7 +96,7 @@ def generate_video(input_video: str, output_video: str, calibration: str):
             axis = key[0]
             color = "tab:orange" if axis == "v" else "tab:blue"
             ax.plot(times[key], distances[key], color=color)
-        ax.set_xlabel("Frame")
+        ax.set_xlabel("Time [s]")
         ax.set_ylabel("Distance (meters)")
         ax.set_title("Distance between ArUco Markers")
 
