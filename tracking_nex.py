@@ -17,7 +17,13 @@ from load_calib import load_calib
 aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
 
 
-def main(calibration: str, cam_id: int = 1, preview: bool = True, slow: bool = False, redis_ip: str = "10.10.20.142"):
+def main(
+    calibration: str,
+    cam_id: int = 1,
+    preview: bool = True,
+    slow: bool = False,
+    redis_ip: str = "10.10.20.142",
+):
     r = redis.Redis(redis_ip, decode_responses=True)
     # Initialize the webcam
 
