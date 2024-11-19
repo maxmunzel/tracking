@@ -13,10 +13,10 @@ from relative import marker_w
 aruco_dict = aruco.getPredefinedDictionary(aruco.DICT_6X6_250)
 
 
-def load_realsense_calibration(profile, left_stream_type=rs.stream.fisheye):
+def load_realsense_calibration(profile, stream_type=rs.stream.color):
     """Load camera matrix and distortion coefficients for the RealSense D435i."""
     intrinsics = (
-        profile.get_stream(left_stream_type).as_video_stream_profile().get_intrinsics()
+        profile.get_stream(stream_type).as_video_stream_profile().get_intrinsics()
     )
     camera_matrix = np.array(
         [
@@ -40,8 +40,8 @@ def main(
     pipeline = rs.pipeline()
     config = rs.config()
     config.enable_stream(
-        rs.stream.fisheye, 1, 848, 800, rs.format.y8, 30
-    )  # Left tracking camera
+        rs.stream.color, 1920, 1080, rs.format.bgr8, 30
+    )  # RGB camera at max resolution
 
     profile = pipeline.start(config)
 
@@ -59,8 +59,10 @@ def main(
 
             # Wait for a frame
             frames = pipeline.wait_for_frames()
-            left_frame = frames.get_fisheye_frame(1)  # Left tracking camera
-            frame = np.asanyarray(left_frame.get_data())
+            color_frame = frames.get_color_frame()  # RGB camera frame
+            if not color_frame:
+                continue
+            frame = np.asanyarray(color_frame.get_data())
 
             # Apply gamma correction
             frame = cv2.LUT(frame, table)
